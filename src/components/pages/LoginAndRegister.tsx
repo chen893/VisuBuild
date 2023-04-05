@@ -91,7 +91,7 @@ const LoginAndRegister: React.FC = () => {
   const [isLogin, setIsLogin] = useState<boolean>(true)
 
   return (
-    <div className=" bg-gray-100 flex items-center justify-center">
+    <div className=" bg-gray-100 flex items-center justify-center  w-screen h-screen">
       <div className="w-450 bg-white border-gray-300 border-solid border-2 p-10 rounded-lg shadow-lg">
         <div className="flex justify-between items-center pb-5">
           <Button
