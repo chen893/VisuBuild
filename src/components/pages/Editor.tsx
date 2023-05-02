@@ -36,7 +36,16 @@ const Editor: React.FC = () => {
   const handleMouseDownOnComponent = useCallback(
     (e: MouseEvent, index: number) => {
       if (e.button !== 0) return
-      e.preventDefault()
+      startPosition.current = {
+        x: e.clientX,
+        y: e.clientY,
+        isMove: true
+      }
+
+      startListStyle.current = componentList.map((item) => ({
+        left: item.style.left,
+        top: item.style.top
+      }))
       e.stopPropagation()
       setComponentList((preComponentList) => {
         const newList = preComponentList.map((comItem, comIndex) => {
@@ -57,22 +66,19 @@ const Editor: React.FC = () => {
   let offsetX = 0
   let offsetY = 0
 
-  const handleMouseDownOnContainer = useCallback((e: MouseEvent) => {
+  const handleMouseDownOnContainer = useCallback((e: React.MouseEvent) => {
     if (e.button !== 0) return
-    console.log('first')
-    startPosition.current = {
-      x: e.clientX,
-      y: e.clientY,
-      isMove: true
-    }
 
-    startListStyle.current = componentList.map((item) => ({
-      left: item.style.left,
-      top: item.style.top
-    }))
+    setComponentList((preComponentList) => {
+      const newList = preComponentList.map((comItem, comIndex) => {
+        comItem.focus = false
+        return comItem
+      })
+      return newList
+    })
   }, [componentList, startPosition.current, startListStyle.current])
 
-  const handleMouseMove = useCallback((e: MouseEvent) => {
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
     if (!startPosition.current.isMove) return
 
     const isMove = componentList.some((item) => item.focus === true)
@@ -91,22 +97,9 @@ const Editor: React.FC = () => {
     }
   }, [componentList, startPosition.current, startListStyle.current])
 
-  const handleMouseUp = useCallback((e: MouseEvent) => {
+  const handleMouseUp = useCallback((e: React.MouseEvent) => {
     startPosition.current.isMove = false
   }, [])
-
-  useEffect(() => {
-    if (containerRef.current == null) return
-
-    containerRef.current.addEventListener('mousemove', handleMouseMove)
-    containerRef.current.addEventListener('mouseup', handleMouseUp)
-    containerRef.current.addEventListener('mousedown', handleMouseDownOnContainer)
-    return () => {
-      containerRef.current?.removeEventListener('mousemove', handleMouseMove)
-      containerRef.current?.removeEventListener('mouseup', handleMouseUp)
-      containerRef.current?.removeEventListener('mousedown', handleMouseDownOnContainer)
-    }
-  }, [containerRef.current, handleMouseMove, handleMouseUp, handleMouseDownOnContainer])
 
   return (
     <div className="flex h-screen w-screen bg-gray-100">
@@ -142,7 +135,11 @@ const Editor: React.FC = () => {
           />
         ))}
       </div>
-      <div className="w-5/6 p-4 relative" ref={containerRef} >
+      <div className="w-5/6 p-4 relative" ref={containerRef}
+      onMouseDown={handleMouseDownOnContainer}
+      onMouseUp={handleMouseUp}
+      onMouseMove={handleMouseMove}
+      >
 
         {componentList.map((Item, index) => (
           <div
