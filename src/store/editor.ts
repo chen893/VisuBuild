@@ -1,4 +1,5 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
+import { cloneDeep } from 'lodash-es'
 interface Component {
   com: any
   name: string
@@ -25,6 +26,9 @@ interface EditorState {
     y: Array<{ top: number, height: number }>
   }
   lastIndex: number
+  history: Component[][]
+  historyIndex: number
+  copiedComponents: Component[]
 }
 const initialState: EditorState = {
   componentList: [],
@@ -39,7 +43,10 @@ const initialState: EditorState = {
     x: [],
     y: []
   },
-  lastIndex: -1
+  lastIndex: -1,
+  history: [[]],
+  historyIndex: 0,
+  copiedComponents: []
 }
 
 function getMidPoint (point: number, length: number): number {
@@ -116,13 +123,25 @@ function updateLinePositionA (
   }
 }
 
+const updateHistory = (state: EditorState): { history: Component[][], historyIndex: number } => {
+  const { history, historyIndex, componentList } = state
+  const newHistory = [
+    ...history.slice(0, historyIndex + 1),
+    cloneDeep(componentList)
+  ]
+  const newHistoryIndex = historyIndex + 1
+  return { history: newHistory, historyIndex: newHistoryIndex }
+}
+
 const editorSlice = createSlice({
   name: 'editor',
   initialState,
   reducers: {
     addComponentInList: (state, action) => {
-      console.log('action', action.payload)
       state.componentList.push(action.payload)
+      const updatedData = updateHistory(state)
+      state.history = updatedData.history
+      state.historyIndex = updatedData.historyIndex
     },
     changeComponentFocus: (
       state,
@@ -151,6 +170,10 @@ const editorSlice = createSlice({
         }
         return comItem
       })
+
+      const updatedData = updateHistory(state)
+      state.history = updatedData.history
+      state.historyIndex = updatedData.historyIndex
     },
     updateComponentPosition: (
       state,
@@ -207,13 +230,51 @@ const editorSlice = createSlice({
         state.lines.x.push({ left, width })
         state.lines.y.push({ top, height })
       })
+      const updatedData = updateHistory(state)
+      state.history = updatedData.history
+      state.historyIndex = updatedData.historyIndex
     },
     resetPositionAndLines: (state, action) => {
       state.startPosition.isMove = false
       state.lines.x = []
       state.lines.y = []
+    },
+    deleteFocusedComponents: (state) => {
+      state.componentList = state.componentList.filter((component) => component.focus !== true)
+      const updatedData = updateHistory(state)
+      state.history = updatedData.history
+      state.historyIndex = updatedData.historyIndex
+    },
+    copyComponents: (state) => {
+      state.copiedComponents = state.componentList.filter((component) => component.focus)
+      const updatedData = updateHistory(state)
+      state.history = updatedData.history
+      state.historyIndex = updatedData.historyIndex
+    },
+    pasteComponents: (state) => {
+      const newComponents = state.copiedComponents.map((component) => {
+        const newComponent = cloneDeep(component)
+        newComponent.style.left += 10
+        newComponent.style.top += 10
+        return newComponent
+      })
+      state.componentList.push(...newComponents)
+      const updatedData = updateHistory(state)
+      state.history = updatedData.history
+      state.historyIndex = updatedData.historyIndex
+    },
+    undo: (state) => {
+      if (state.historyIndex > 0) {
+        state.historyIndex -= 1
+        state.componentList = cloneDeep(state.history[state.historyIndex])
+      }
+    },
+    redo: (state) => {
+      if (state.historyIndex < state.history.length - 1) {
+        state.historyIndex += 1
+        state.componentList = cloneDeep(state.history[state.historyIndex])
+      }
     }
-
   }
 })
 
@@ -223,6 +284,11 @@ export const {
   changeComponentFocus,
   updateComponentPosition,
   handleMouseDownOnCom,
-  resetPositionAndLines
+  resetPositionAndLines,
+  deleteFocusedComponents,
+  copyComponents,
+  pasteComponents,
+  undo,
+  redo
 } = editorSlice.actions
 export default editorSlice.reducer

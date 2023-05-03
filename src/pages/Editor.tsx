@@ -6,7 +6,12 @@ import {
   updateComponentPosition,
   handleMouseDownOnCom,
   resetPositionAndLines,
-  addComponentInList
+  addComponentInList,
+  deleteFocusedComponents,
+  redo,
+  undo,
+  pasteComponents,
+  copyComponents
 } from '../store/editor'
 import { components, componentsMap } from '../components/AvailableComponents'
 
@@ -73,9 +78,46 @@ const Editor: React.FC = () => {
   const handleMouseUp = useCallback((e: React.MouseEvent) => {
     dispatch(resetPositionAndLines(null))
   }, [])
+  const deleteFocused = (): void => {
+    dispatch(deleteFocusedComponents())
+  }
+
+  const copySelected = (): void => {
+    dispatch(copyComponents())
+  }
+
+  const pasteCopied = (): void => {
+    dispatch(pasteComponents())
+  }
+
+  const undoAction = (): void => {
+    dispatch(undo())
+  }
+
+  const redoAction = (): void => {
+    dispatch(redo())
+  }
+  const keyHandlers: Record<string, () => void> = {
+    Delete: deleteFocused,
+    'Ctrl+c': copySelected,
+    'Ctrl+v': pasteCopied,
+    'Ctrl+z': undoAction,
+    'Ctrl+Shift+z': redoAction
+  }
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      const keyCombination = `${e.ctrlKey ? 'Ctrl+' : ''}${e.shiftKey ? 'Shift+' : ''}${e.key}`
+
+      const handler = keyHandlers[keyCombination]
+      if (typeof handler === 'function') {
+        handler()
+      }
+    },
+    []
+  )
 
   return (
-    <div className="flex h-screen w-screen bg-gray-100">
+    <div className="flex h-screen w-screen bg-gray-100" tabIndex={0} onKeyDown={handleKeyDown}>
       <div className="w-1/6 bg-white p-4 border-r">
         {components.map((comp, index) => (
           <comp.component
