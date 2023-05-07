@@ -11,38 +11,54 @@ import {
   redo,
   undo,
   pasteComponents,
-  copyComponents
+  copyComponents,
+  setSelectComponentIndex
 } from '../store/editor'
 import { components, componentsMap } from '../components/AvailableComponents'
+import AttributeEditor from '../components/AttributeEditor'
+import TextNode from '../components/common/TextNode'
+import Carousel from '../components/common/Carousel'
 
 const Editor: React.FC = () => {
-  const componentList = useSelector((state: RootState) => state.editor.componentList)
-  const linePosition = useSelector((state: RootState) => state.editor.linePosition)
+  const componentList = useSelector(
+    (state: RootState) => state.editor.componentList
+  )
+  const linePosition = useSelector(
+    (state: RootState) => state.editor.linePosition
+  )
+  const selectedComponentIndex = useSelector(
+    (state: RootState) => state.editor.selectComponentIndex
+  )
   const dispatch = useDispatch()
   const containerRef = useRef<HTMLDivElement>(null)
-  const currentComponent = useRef<string>('')
-  const startPosition = useSelector((state: RootState) => state.editor.startPosition)
+  const startPosition = useSelector(
+    (state: RootState) => state.editor.startPosition
+  )
 
-  const startListStyle = useSelector((state: RootState) => state.editor.startListStyle)
+  const startListStyle = useSelector(
+    (state: RootState) => state.editor.startListStyle
+  )
 
   const onDragStart = useCallback(
     (e: React.DragEvent, componentName: string) => {
-      currentComponent.current = componentName
       e.dataTransfer.effectAllowed = 'move'
     },
     []
   )
 
-  const handleMouseDownOnComponent = useCallback((e: MouseEvent, index: number) => {
-    e.stopPropagation()
-    if (e.button !== 0) return
+  const handleMouseDownOnComponent = useCallback(
+    (e: MouseEvent, index: number) => {
+      e.stopPropagation()
+      if (e.button !== 0) return
 
-    const clientX = e.clientX
-    const clientY = e.clientY
-
-    dispatch(handleMouseDownOnCom({ clientX, clientY, index }))
-    dispatch(changeComponentFocus({ index, isShiftKey: e.shiftKey }))
-  }, [])
+      const clientX = e.clientX
+      const clientY = e.clientY
+      dispatch(setSelectComponentIndex(index))
+      dispatch(handleMouseDownOnCom({ clientX, clientY, index }))
+      dispatch(changeComponentFocus({ index, isShiftKey: e.shiftKey }))
+    },
+    []
+  )
 
   // 获取当前鼠标位于拖拽元素的相对位置。
   let offsetX = 0
@@ -104,93 +120,134 @@ const Editor: React.FC = () => {
     'Ctrl+z': undoAction,
     'Ctrl+Shift+z': redoAction
   }
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
-      const keyCombination = `${e.ctrlKey ? 'Ctrl+' : ''}${e.shiftKey ? 'Shift+' : ''}${e.key}`
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    const keyCombination = `${e.ctrlKey ? 'Ctrl+' : ''}${
+      e.shiftKey ? 'Shift+' : ''
+    }${e.key}`
 
-      const handler = keyHandlers[keyCombination]
-      if (typeof handler === 'function') {
-        handler()
-      }
-    },
-    []
-  )
+    const handler = keyHandlers[keyCombination]
+    if (typeof handler === 'function') {
+      handler()
+    }
+  }, [])
 
   return (
-    <div className="flex h-screen w-screen bg-gray-100" tabIndex={0} onKeyDown={handleKeyDown}>
+    // ...
+    <div
+      className="flex h-screen w-screen bg-gray-100"
+      tabIndex={0}
+      onKeyDown={handleKeyDown}
+    >
       <div className="w-1/6 bg-white p-4 border-r">
+        {/* <TextNode dra></TextNode> */}
         {components.map((comp, index) => (
-          <comp.component
-            key={index}
-            draggable="true"
-            onDragStart={(e) => {
-              onDragStart(e, comp.name)
-              const rect = e.target.getBoundingClientRect()
-              offsetX = e.clientX - rect.x
-              offsetY = e.clientY - rect.y
-            }}
-            onDragEnd={(e) => {
-              const rect = containerRef.current?.getBoundingClientRect()
-              const newOffsetX = e.clientX - (rect?.x ?? 0) - offsetX
-              const newOffsetY = e.clientY - (rect?.y ?? 0) - offsetY
-              dispatch(
-                addComponentInList(
+          <div key={index}
+          draggable="true"
+          onDragStart={(e) => {
+            onDragStart(e, comp.name)
+            const rect = e.target.getBoundingClientRect()
+            offsetX = e.clientX - rect.x
+            offsetY = e.clientY - rect.y
+          }}
+          onDragEnd={(e) => {
+            const rect = containerRef.current?.getBoundingClientRect()
+            const newOffsetX = e.clientX - (rect?.x ?? 0) - offsetX
+            const newOffsetY = e.clientY - (rect?.y ?? 0) - offsetY
+            dispatch(
+              addComponentInList({
+                name: comp.name,
+                props: {
+                  left: newOffsetX,
+                  top: newOffsetY,
+                  width: 300,
+                  height: 100
+                }
+              })
+            )
+            e.preventDefault()
+          }}>
+            <div className='border border-black mb-10'>
+              {comp.name}
+            </div>
+          {/* <comp.component/> */}
+          </div>
 
-                  {
-                    name: comp.name,
-                    style: {
-                      left: newOffsetX,
-                      top: newOffsetY,
-                      width: 300,
-                      height: 100
-                    }
-                  }
-                )
-              )
-              e.preventDefault()
-            }}
-          />
         ))}
       </div>
-      <div
-        className="w-5/6 p-4 relative"
-        ref={containerRef}
-        onMouseDown={handleMouseDownOnContainer}
-        onMouseUp={handleMouseUp}
-        onMouseMove={handleMouseMove}
-      >
+      <div className="w-5/6 p-4 flex justify-center items-center">
         <div
+          className="relative bg-white border border-gray-300 rounded-md shadow-md"
+          style={{
+            width: '375px',
+            height: '667px',
+            overflow: 'hidden'
+          }}
+        >
+          <div
+            className="p-4"
+            ref={containerRef}
+            onMouseDown={handleMouseDownOnContainer}
+            onMouseUp={handleMouseUp}
+            onMouseMove={handleMouseMove}
+            style={{
+              position: 'relative',
+              width: '100%',
+              height: '100%'
+            }}
+          >
+            {/* <div
           className="absolute top-0 bottom-0 border border-red-300"
           style={{ left: String(linePosition.x) + 'px' }}
         ></div>
         <div
           className="absolute left-0 right-0 border border-red-300"
           style={{ top: String(linePosition.y) + 'px' }}
-        ></div>
+        ></div> */}
+            {componentList.map((Item, index) => {
+              const CurrentComponent = componentsMap.get(Item.name)
+              return (
+                <div
+                  key={index}
+                  style={{
+                    position: 'absolute',
+                    left: Item.props.left,
+                    top: Item.props.top,
+                    width: Item.props.width,
+                    height: Item.props.height
+                  }}
+                  className={
+                    Item.focus === true ? 'border-red-300 border-2' : ''
+                  }
+                  onClick={
+                    (e) => {
+                      e.stopPropagation()
+                      e.preventDefault()
+                    }
+                  }
+                  onMouseDown={(e) => {
+                    handleMouseDownOnComponent(e, index)
+                    e.preventDefault()
+                    e.stopPropagation()
+                  }}
+                >
+                  <CurrentComponent {...Item.props}/>
+                </div>
+              )
+            })}
 
-        {componentList.map((Item, index) => {
-          const NowCom = componentsMap.get(Item.name)
-          return (
-            <div
-              key={index}
-              style={{
-                position: 'absolute',
-                left: Item.style.left,
-                top: Item.style.top,
-                width: Item.style.width,
-                height: Item.style.height
-              }}
-              className={Item.focus === true ? 'border-red-300 border-2' : ''}
-              onMouseDown={(e) => {
-                handleMouseDownOnComponent(e, index)
-              }}
-            >
-              <NowCom />
-            </div>
-          )
-        })}
+            {/* <Carousel ></Carousel> */}
+          </div>
+        </div>
       </div>
-      <div className="w-1/6 p-4 border-l bg-white">属性选择</div>
+      <div className="w-1/6 p-4 border-l bg-white">
+        <AttributeEditor
+          selectedComponent={
+            selectedComponentIndex >= 0
+              ? componentList[selectedComponentIndex]
+              : null
+          }
+        />
+      </div>
     </div>
   )
 }

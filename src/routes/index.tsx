@@ -1,9 +1,9 @@
 import { Route, type RouteObject, Routes } from 'react-router-dom'
 
-import LoginAndRegister from '../components/pages/LoginAndRegister'
+import LoginAndRegister from '../pages/LoginAndRegister'
 import PrivateRoute from './PrivateRoute'
-import Editor from '../components/pages/Editor'
-import Home from '../components/pages/Home'
+import Editor from '../pages/Editor'
+import Home from '../pages/Home'
 import React from 'react'
 
 const routes: RouteObject[] = [

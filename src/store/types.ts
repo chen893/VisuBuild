@@ -1,8 +1,7 @@
 interface Component {
-  com: any
   name: string
   focus?: boolean
-  style: {
+  props: {
     left: number
     top: number
     width: number
@@ -13,8 +12,6 @@ interface Component {
 export interface EditorState {
   componentList: Component[]
   linePosition: { x: number, y: number }
-  history: Component[][]
-  historyIndex: number
   startPosition: {
     x: number
     y: number
@@ -25,6 +22,11 @@ export interface EditorState {
     x: Array<{ left: number, width: number }>
     y: Array<{ top: number, height: number }>
   }
+  lastIndex: number
+  history: Component[][]
+  historyIndex: number
+  copiedComponents: Component[]
+  selectComponentIndex: number
 }
 
 export interface RootState {
