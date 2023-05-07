@@ -6,18 +6,30 @@ import BooleanEditor from './BooleanEditor'
 import { cloneDeep } from 'lodash-es'
 const { Option } = Select
 
-const ArrayEditor = ({ attribute, value, onChange }) => {
+const ArrayEditor = ({ attribute, value: propsValue, onChange }) => {
+  const [value, setValue] = useState(propsValue)
   const [arrayLength, setArrayLength] = useState(value.length)
 
   const handleLengthChange = (newLength) => {
     setArrayLength(newLength)
-    const newValue = value.slice(0, newLength)
-    onChange(newValue)
+    let newValue = []
+    if (newLength === value.length) return null
+    else {
+      newValue = cloneDeep(value.slice(0, newLength))
+      if (newLength > value.length) {
+        for (let i = value.length; i < newLength; i++) {
+          newValue.push({})
+        }
+      }
+      setValue(newValue)
+      onChange(newValue)
+    }
   }
 
   const handleItemChange = (index, attrName, newValue) => {
     const updatedValue = cloneDeep([...value])
     updatedValue[index][attrName] = newValue
+    setValue(updatedValue)
     onChange(updatedValue)
   }
 

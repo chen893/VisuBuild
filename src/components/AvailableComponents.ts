@@ -2,6 +2,10 @@ import { Input, Rate, Switch } from 'antd'
 import TextNode from './common/TextNode'
 import BottomNavBar from './common/BottomNavBar'
 import Carousel from './common/Carousel'
+import ImageComponent from './common/ImageComponent'
+import QRCodeComponent from './common/QRCodeComponent'
+import MarketingPoster from './common/MarketingPoster'
+import Navigation from './common/Navigation'
 
 const components = [
   { name: 'Input', component: Input },
@@ -18,6 +22,22 @@ const components = [
   {
     name: 'Carousel',
     component: Carousel
+  },
+  {
+    name: 'Image',
+    component: ImageComponent
+  },
+  {
+    name: 'QRCode',
+    component: QRCodeComponent
+  },
+  {
+    name: 'MarketingPoster',
+    component: MarketingPoster
+  },
+  {
+    name: 'Navigation',
+    component: Navigation
   }
 ]
 
@@ -61,6 +81,35 @@ const componentAttributes: Record<string, Attribute[]> = {
       sample: [
         { name: 'link', type: 'text' },
         { name: 'imageUrl', type: 'text' }
+      ]
+    }
+  ],
+  Image: [
+    { name: 'src', type: 'text' },
+    { name: 'alt', type: 'text' },
+    { name: 'width', type: 'number' },
+    { name: 'height', type: 'number' }
+  ],
+  QRCode: [
+    { name: 'value', type: 'text' },
+    { name: 'size', type: 'number' }
+  ],
+  MarketingPoster: [
+    { name: 'backgroundImageUrl', type: 'text' },
+    { name: 'qrCodeValue', type: 'text' },
+    { name: 'qrCodeSize', type: 'number' },
+    { name: 'qrCodePositionX', type: 'number' },
+    { name: 'qrCodePositionY', type: 'number' },
+    ...getStyleAttributes('width', 'height')
+  ],
+  Navigation: [
+    {
+      name: 'navItems',
+      type: 'array',
+      sample: [
+        { name: 'title', type: 'text' },
+        { name: 'link', type: 'text' },
+        { name: 'iconUrl', type: 'text' }
       ]
     }
   ]

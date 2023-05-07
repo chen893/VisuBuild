@@ -25,8 +25,8 @@ function getComponentAttributes (componentName: string): Attribute[] {
 interface AttributeEditorProps {
   selectedComponent: Component | null
 }
-export const renderEditor = (attribute: Attribute, value: any, dispatch) => {
-  console.log('attribute', attribute, value)
+export const renderEditor = (attribute: Attribute, props: any, dispatch) => {
+  const value = props[attribute.name]
   switch (attribute.type) {
     case 'text':
       return (
@@ -86,13 +86,12 @@ const AttributeEditor: React.FC<AttributeEditorProps> = ({
   const dispatch = useDispatch()
   const selectComponentIndex = useSelector((state: RootState) => state.editor.selectComponentIndex)
   const componentList = useSelector((state: RootState) => state.editor.componentList)
-  // const [currentComponent, setCurrentComponent] = useState(())
   const currentComponent = componentList[selectComponentIndex]
   const attributes = getComponentAttributes(selectedComponent.name)
 
   return (
     <div>
-      {attributes.map((attribute) => renderEditor(attribute, currentComponent.props[attribute.name], dispatch))}
+      {attributes.map((attribute) => renderEditor(attribute, currentComponent.props, dispatch))}
     </div>
   )
 }
